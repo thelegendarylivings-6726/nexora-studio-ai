@@ -22,3 +22,61 @@ function previewProject(){const c=document.getElementById('stage').innerHTML;con
 function exportProject(){const c=document.getElementById('stage').innerHTML;const data='<!doctype html><meta name="viewport" content="width=device-width"><title>Nexora Project</title><style>body{font-family:Arial;margin:0;background:#fff;color:#111}.nb{padding:40px;max-width:1100px;margin:auto}img,iframe{max-width:100%}button{padding:12px 18px}</style>'+c;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/html'}));a.download='nexora-project.html';a.click()}
 function openStudio(){document.querySelector('.canvas')?.scrollIntoView({behavior:'smooth'})}
 document.addEventListener('DOMContentLoaded',bindBlocks);
+
+// Nexora Studio quick-fix layer: explicit local save, preview and honest export actions.
+function publish(){
+  const status=document.getElementById('saveStatus');
+  if(status) status.textContent='Hosting is not connected yet — exporting HTML instead.';
+  exportProject();
+}
+function setView(v){
+  const p=document.querySelector('.preview');
+  if(!p)return;
+  p.style.width=v==='mobile'?'390px':v==='tablet'?'768px':'100%';
+  p.style.maxWidth='100%';
+  p.style.margin='0 auto';
+}
+function saveProject(){
+  const stage=document.getElementById('stage');
+  if(!stage)return;
+  const payload={version:1,html:stage.innerHTML,savedAt:new Date().toISOString()};
+  try{
+    localStorage.setItem('nexoraOwnerProject',JSON.stringify(payload));
+    const status=document.getElementById('saveStatus');
+    if(status)status.textContent='Saved on this device ✓';
+  }catch(e){alert('Could not save this project on this device. Storage may be full or disabled.');}
+}
+function loadProject(){
+  try{
+    const raw=localStorage.getItem('nexoraOwnerProject');
+    if(!raw)return alert('No saved project found on this device.');
+    const parsed=JSON.parse(raw);
+    const html=typeof parsed==='string'?parsed:parsed.html;
+    if(typeof html!=='string')throw new Error('Invalid project file');
+    snapshot();
+    document.getElementById('stage').innerHTML=html;
+    bindBlocks();
+    const status=document.getElementById('saveStatus');
+    if(status)status.textContent='Project loaded ✓';
+  }catch(e){alert('Saved project could not be loaded.');}
+}
+function previewProject(){
+  const stage=document.getElementById('stage');
+  if(!stage)return;
+  const w=window.open('','_blank');
+  if(!w){alert('Allow pop-ups to open the preview.');return;}
+  const safe=stage.innerHTML;
+  w.document.open();
+  w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width"><title>Nexora Preview</title><style>body{font-family:Arial,sans-serif;margin:0;padding:24px;background:#f7f7f4;color:#111}.nb{padding:28px;margin:16px auto;max-width:1100px}img,iframe{max-width:100%}button{padding:12px 18px}</style></head><body>'+safe+'</body></html>');
+  w.document.close();
+}
+function exportProject(){
+  const stage=document.getElementById('stage');
+  if(!stage)return;
+  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nexora Project</title><style>body{font-family:Arial,sans-serif;margin:0;background:#fff;color:#111}.nb{padding:40px;max-width:1100px;margin:auto}img,iframe{max-width:100%}button{padding:12px 18px}</style></head><body>'+stage.innerHTML+'</body></html>';
+  const url=URL.createObjectURL(new Blob([doc],{type:'text/html'}));
+  const a=document.createElement('a');a.href=url;a.download='nexora-project.html';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const status=document.getElementById('saveStatus');
+  if(status)status.textContent='HTML export downloaded ✓';
+}
