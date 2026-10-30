@@ -1,82 +1,133 @@
-let history=[],redoStack=[],selected=null;
-function snapshot(){const s=document.getElementById('stage');if(s){history.push(s.innerHTML);if(history.length>30)history.shift();redoStack=[]}}
-function blockHTML(n){const id='b'+Date.now(); if(n==='Hero')return '<section class="nb" id="'+id+'" draggable="true"><p class="eyebrow">NEW EXPERIENCE</p><h2 contenteditable="true">Your headline here</h2><p contenteditable="true">Describe your product, service or idea.</p><button contenteditable="true">Get Started</button></section>'; if(n==='Text')return '<section class="nb" id="'+id+'" draggable="true"><h3 contenteditable="true">Section title</h3><p contenteditable="true">Click and type your content here.</p></section>'; if(n==='Image')return '<section class="nb" id="'+id+'" draggable="true"><img src="https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=1200&q=80" style="width:100%;border-radius:14px" alt="Editable visual"><p contenteditable="true">Image block — use inspector URL to replace.</p></section>'; if(n==='3D Scene')return '<section class="nb" id="'+id+'" draggable="true"><div class="scene3d">3D / Spline Embed</div><p contenteditable="true">Select this block and paste an embed URL in the inspector.</p></section>'; return '<section class="nb" id="'+id+'" draggable="true"><button contenteditable="true">Call to action</button></section>'}
-function addBlock(n){const s=document.getElementById('stage');if(!s)return;snapshot();s.insertAdjacentHTML('beforeend',blockHTML(n));bindBlocks()}
-function bindBlocks(){document.querySelectorAll('#stage .nb').forEach(el=>{el.onclick=e=>{e.stopPropagation();selectBlock(el)};el.ondragstart=e=>{e.dataTransfer.setData('text/plain',el.id)};el.ondragover=e=>e.preventDefault();el.ondrop=e=>{e.preventDefault();const x=document.getElementById(e.dataTransfer.getData('text/plain'));if(x&&x!==el){snapshot();el.before(x)}}})}
-function selectBlock(el){selected=el;document.querySelectorAll('.nb').forEach(x=>x.classList.remove('selected'));el.classList.add('selected');const x=document.getElementById('inspector');if(x)x.innerHTML='<h3>Inspector</h3><label>Background</label><input type="color" value="#ffffff" oninput="styleSelected(\'background\',this.value)"><label>Text color</label><input type="color" value="#111111" oninput="styleSelected(\'color\',this.value)"><label>Padding</label><input type="range" min="8" max="100" value="28" oninput="styleSelected(\'padding\',this.value+\'px\')"><label>Radius</label><input type="range" min="0" max="40" value="14" oninput="styleSelected(\'borderRadius\',this.value+\'px\')"><button onclick="duplicateSelected()">Duplicate</button><button onclick="deleteSelected()">Delete</button><button onclick="moveSelected(-1)">Move Up</button><button onclick="moveSelected(1)">Move Down</button><label>3D / Embed URL</label><input id="embedUrl" placeholder="https://..." ><button onclick="applyEmbed()">Apply Embed</button>'}
-function styleSelected(k,v){if(selected){snapshot();selected.style[k]=v}}
-function deleteSelected(){if(selected){snapshot();selected.remove();selected=null}}
-function duplicateSelected(){if(selected){snapshot();selected.after(selected.cloneNode(true));bindBlocks()}}
-function moveSelected(d){if(!selected)return;snapshot();if(d<0&&selected.previousElementSibling)selected.parentNode.insertBefore(selected,selected.previousElementSibling);if(d>0&&selected.nextElementSibling)selected.parentNode.insertBefore(selected.nextElementSibling,selected)}
-function applyEmbed(){if(!selected)return;const u=document.getElementById('embedUrl').value.trim();if(!/^https:\/\//.test(u))return alert('Use a secure https embed URL.');snapshot();selected.innerHTML='<iframe src="'+u.replace(/"/g,'')+'" style="width:100%;height:360px;border:0;border-radius:14px" allowfullscreen></iframe>'}
-function generate(){const v=document.getElementById('idea').value.trim();if(!v)return alert('Describe the website you want to build.');const s=document.getElementById('stage');snapshot();const t=v.toLowerCase();let title=v.replace(/^build |^create |^make /i,'');title=title.charAt(0).toUpperCase()+title.slice(1);s.innerHTML='<section class="nb" draggable="true"><p class="eyebrow">NEXORA SMART DRAFT</p><h2 contenteditable="true">'+escapeHtml(title)+'</h2><p contenteditable="true">A responsive starting point generated from your prompt. Edit every line and add sections from the Insert panel.</p><button contenteditable="true">Explore</button></section>'+blockHTML('Text')+(t.includes('3d')?blockHTML('3D Scene'):'')+blockHTML('Button');bindBlocks();s.animate([{opacity:.25,transform:'scale(.98)'},{opacity:1,transform:'scale(1)'}],{duration:500})}
-function escapeHtml(x){return x.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function undo(){const s=document.getElementById('stage');if(history.length){redoStack.push(s.innerHTML);s.innerHTML=history.pop();bindBlocks()}}
-function redo(){const s=document.getElementById('stage');if(redoStack.length){history.push(s.innerHTML);s.innerHTML=redoStack.pop();bindBlocks()}}
-function saveProject(){localStorage.setItem('nexoraOwnerProject',document.getElementById('stage').innerHTML);const x=document.getElementById('saveStatus');if(x)x.textContent='Project saved on this device ✓'}
-function loadProject(){const x=localStorage.getItem('nexoraOwnerProject');if(x){snapshot();document.getElementById('stage').innerHTML=x;bindBlocks()}else alert('No saved project yet.')}
-function clearCanvas(){snapshot();document.getElementById('stage').innerHTML='<section class="nb"><h2 contenteditable="true">Start building…</h2><p contenteditable="true">Add blocks from the Insert panel.</p></section>';bindBlocks()}
-function setView(v){const p=document.querySelector('.preview');p.style.maxWidth=v==='mobile'?'390px':v==='tablet'?'768px':'none';p.style.margin='0 auto'}
-function setAnimation(v){if(!selected)return alert('Select a block first.');if(v==='fade')selected.animate([{opacity:0},{opacity:1}],{duration:700});if(v==='float')selected.animate([{transform:'translateY(0)'},{transform:'translateY(-12px)'},{transform:'translateY(0)'}],{duration:1800,iterations:Infinity})}
-function previewProject(){const c=document.getElementById('stage').innerHTML;const w=window.open();w.document.write('<!doctype html><meta name="viewport" content="width=device-width"><style>body{font-family:Arial;margin:0;padding:30px}.nb{padding:28px;margin:16px auto;max-width:1000px}img,iframe{max-width:100%}button{padding:12px 18px}</style>'+c)}
-function exportProject(){const c=document.getElementById('stage').innerHTML;const data='<!doctype html><meta name="viewport" content="width=device-width"><title>Nexora Project</title><style>body{font-family:Arial;margin:0;background:#fff;color:#111}.nb{padding:40px;max-width:1100px;margin:auto}img,iframe{max-width:100%}button{padding:12px 18px}</style>'+c;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'text/html'}));a.download='nexora-project.html';a.click()}
-function openStudio(){document.querySelector('.canvas')?.scrollIntoView({behavior:'smooth'})}
-document.addEventListener('DOMContentLoaded',bindBlocks);
-
-// Nexora Studio quick-fix layer: explicit local save, preview and honest export actions.
-function publish(){
-  const status=document.getElementById('saveStatus');
-  if(status) status.textContent='Hosting is not connected yet — exporting HTML instead.';
-  exportProject();
-}
-function setView(v){
-  const p=document.querySelector('.preview');
-  if(!p)return;
-  p.style.width=v==='mobile'?'390px':v==='tablet'?'768px':'100%';
-  p.style.maxWidth='100%';
-  p.style.margin='0 auto';
-}
-function saveProject(){
-  const stage=document.getElementById('stage');
-  if(!stage)return;
-  const payload={version:1,html:stage.innerHTML,savedAt:new Date().toISOString()};
-  try{
-    localStorage.setItem('nexoraOwnerProject',JSON.stringify(payload));
-    const status=document.getElementById('saveStatus');
-    if(status)status.textContent='Saved on this device ✓';
-  }catch(e){alert('Could not save this project on this device. Storage may be full or disabled.');}
-}
-function loadProject(){
-  try{
-    const raw=localStorage.getItem('nexoraOwnerProject');
-    if(!raw)return alert('No saved project found on this device.');
-    const parsed=JSON.parse(raw);
-    const html=typeof parsed==='string'?parsed:parsed.html;
-    if(typeof html!=='string')throw new Error('Invalid project file');
+(() => {
+  "use strict";
+  const STORAGE_KEY = "nexoraStudioProjectV2";
+  let history = [], redoStack = [], selectedId = null, idCounter = 0, currentView = "desktop";
+  const $ = (id) => document.getElementById(id);
+  const stage = () => $("stage");
+  const status = (message) => { const el = $("saveStatus"); if (el) el.textContent = message; };
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  const newId = () => "block-" + Date.now().toString(36) + "-" + (++idCounter).toString(36);
+  function snapshot() {
+    if (!stage()) return;
+    history.push(stage().innerHTML);
+    if (history.length > 40) history.shift();
+    redoStack = [];
+  }
+  function blockHTML(type) {
+    const id = newId();
+    const common = 'class="nb" data-block="' + type + '" data-id="' + id + '" draggable="true"';
+    if (type === "Hero") return '<section ' + common + '><p class="eyebrow">NEW EXPERIENCE</p><h2 contenteditable="true">Your headline here</h2><p contenteditable="true">Describe your product, service or idea.</p><button contenteditable="true">Get started</button></section>';
+    if (type === "Text") return '<section ' + common + '><h3 contenteditable="true">Section title</h3><p contenteditable="true">Click here and write your content.</p></section>';
+    if (type === "Image") return '<section ' + common + '><div class="image-placeholder">IMAGE BLOCK</div><p contenteditable="true">Replace this placeholder with your image in the next iteration.</p></section>';
+    if (type === "3D Scene") return '<section ' + common + '><div class="scene3d">3D EMBED</div><p contenteditable="true">Select this block and add a secure HTTPS embed URL in the inspector.</p></section>';
+    return '<section ' + common + '><h3 contenteditable="true">Ready for the next step?</h3><button contenteditable="true">Call to action</button></section>';
+  }
+  function addBlock(type) {
+    if (!stage()) return;
+    snapshot(); stage().insertAdjacentHTML("beforeend", blockHTML(type)); bindBlocks(); status("Unsaved changes");
+  }
+  function bindBlocks() {
+    document.querySelectorAll("#stage .nb").forEach(el => {
+      el.onclick = event => { if (event.target.closest("[contenteditable=true]")) { selectBlock(el); return; } event.stopPropagation(); selectBlock(el); };
+      el.ondragstart = event => { event.dataTransfer.setData("text/plain", el.dataset.id || ""); event.dataTransfer.effectAllowed = "move"; };
+      el.ondragover = event => { event.preventDefault(); };
+      el.ondrop = event => {
+        event.preventDefault(); const id = event.dataTransfer.getData("text/plain");
+        const moving = [...document.querySelectorAll("#stage .nb")].find(node => node.dataset.id === id);
+        if (moving && moving !== el) { snapshot(); el.before(moving); status("Unsaved changes"); }
+      };
+    });
+  }
+  function selectBlock(el) {
+    if (!el) return;
+    selectedId = el.dataset.id || (el.dataset.id = newId());
+    document.querySelectorAll("#stage .nb").forEach(node => node.classList.toggle("selected", node === el));
+    const panel = $("inspector");
+    panel.innerHTML = '<h3>Design inspector</h3><p class="hint">Changes apply to the selected section.</p>' +
+      '<label for="bgColor">Background</label><input id="bgColor" type="color" value="' + safeColor(el.style.backgroundColor, "#ffffff") + '">' +
+      '<label for="textColor">Text colour</label><input id="textColor" type="color" value="' + safeColor(el.style.color, "#111111") + '">' +
+      '<label for="padRange">Padding</label><input id="padRange" type="range" min="8" max="100" value="' + parseInt(el.style.padding, 10 || 28) + '">' +
+      '<label for="radiusRange">Corner radius</label><input id="radiusRange" type="range" min="0" max="48" value="' + (parseInt(el.style.borderRadius, 10) || 14) + '">' +
+      '<label for="embedUrl">3D / iframe HTTPS URL</label><input id="embedUrl" type="url" placeholder="https://…"><button class="tool" id="applyEmbed">Apply embed</button>' +
+      '<div class="inspector-actions"><button class="tool" id="duplicateBlock">Duplicate</button><button class="tool" id="moveUp">Move up</button><button class="tool" id="moveDown">Move down</button><button class="danger" id="deleteBlock">Delete section</button></div>';
+    $("bgColor").onchange = e => changeStyle("backgroundColor", e.target.value);
+    $("textColor").onchange = e => changeStyle("color", e.target.value);
+    $("padRange").onchange = e => changeStyle("padding", e.target.value + "px");
+    $("radiusRange").onchange = e => changeStyle("borderRadius", e.target.value + "px");
+    $("applyEmbed").onclick = applyEmbed;
+    $("duplicateBlock").onclick = duplicateSelected;
+    $("deleteBlock").onclick = deleteSelected;
+    $("moveUp").onclick = () => moveSelected(-1);
+    $("moveDown").onclick = () => moveSelected(1);
+  }
+  function safeColor(value, fallback) {
+    const probe = document.createElement("span"); probe.style.color = value;
+    return probe.style.color ? rgbToHex(probe.style.color) : fallback;
+  }
+  function rgbToHex(value) {
+    const m = value.match(/\d+/g); return m && m.length >= 3 ? "#" + m.slice(0,3).map(n => Number(n).toString(16).padStart(2,"0")).join("") : "#ffffff";
+  }
+  function selectedBlock() { return [...document.querySelectorAll("#stage .nb")].find(el => el.dataset.id === selectedId); }
+  function changeStyle(property, value) { const el = selectedBlock(); if (!el) return; snapshot(); el.style[property] = value; status("Unsaved changes"); }
+  function deleteSelected() { const el = selectedBlock(); if (!el) return; snapshot(); el.remove(); selectedId = null; $("inspector").innerHTML = '<h3>Design inspector</h3><p class="hint">Choose a section to see its settings.</p>'; status("Unsaved changes"); }
+  function duplicateSelected() { const el = selectedBlock(); if (!el) return; snapshot(); const copy = el.cloneNode(true); copy.dataset.id = newId(); el.after(copy); bindBlocks(); selectBlock(copy); status("Unsaved changes"); }
+  function moveSelected(direction) {
+    const el = selectedBlock(); if (!el) return; const sibling = direction < 0 ? el.previousElementSibling : el.nextElementSibling;
+    if (!sibling) return; snapshot(); if (direction < 0) el.parentNode.insertBefore(el, sibling); else el.parentNode.insertBefore(sibling, el); status("Unsaved changes");
+  }
+  function applyEmbed() {
+    const el = selectedBlock(), input = $("embedUrl"); if (!el || !input) return;
+    let url; try { url = new URL(input.value.trim()); } catch (_) { alert("Enter a valid HTTPS embed URL."); return; }
+    if (url.protocol !== "https:") { alert("Only secure HTTPS embed URLs are allowed."); return; }
+    snapshot(); el.innerHTML = '<iframe title="Embedded interactive scene" src="' + escapeHtml(url.href) + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" sandbox="allow-scripts allow-same-origin allow-forms allow-popups" allowfullscreen></iframe>';
+    status("Unsaved changes");
+  }
+  function generate() {
+    const input = $("idea"), brief = input ? input.value.trim() : "";
+    if (!brief) { alert("Describe the website you want to draft."); return; }
     snapshot();
-    document.getElementById('stage').innerHTML=html;
-    bindBlocks();
-    const status=document.getElementById('saveStatus');
-    if(status)status.textContent='Project loaded ✓';
-  }catch(e){alert('Saved project could not be loaded.');}
-}
-function previewProject(){
-  const stage=document.getElementById('stage');
-  if(!stage)return;
-  const w=window.open('','_blank');
-  if(!w){alert('Allow pop-ups to open the preview.');return;}
-  const safe=stage.innerHTML;
-  w.document.open();
-  w.document.write('<!doctype html><html><head><meta name="viewport" content="width=device-width"><title>Nexora Preview</title><style>body{font-family:Arial,sans-serif;margin:0;padding:24px;background:#f7f7f4;color:#111}.nb{padding:28px;margin:16px auto;max-width:1100px}img,iframe{max-width:100%}button{padding:12px 18px}</style></head><body>'+safe+'</body></html>');
-  w.document.close();
-}
-function exportProject(){
-  const stage=document.getElementById('stage');
-  if(!stage)return;
-  const doc='<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nexora Project</title><style>body{font-family:Arial,sans-serif;margin:0;background:#fff;color:#111}.nb{padding:40px;max-width:1100px;margin:auto}img,iframe{max-width:100%}button{padding:12px 18px}</style></head><body>'+stage.innerHTML+'</body></html>';
-  const url=URL.createObjectURL(new Blob([doc],{type:'text/html'}));
-  const a=document.createElement('a');a.href=url;a.download='nexora-project.html';document.body.appendChild(a);a.click();a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),1000);
-  const status=document.getElementById('saveStatus');
-  if(status)status.textContent='HTML export downloaded ✓';
-}
+    const title = brief.replace(/^(build|create|make|design)\s+/i, "").trim();
+    stage().innerHTML = '<section class="nb" data-block="Hero" data-id="' + newId() + '"><p class="eyebrow">NEXORA STARTER DRAFT</p><h2 contenteditable="true">' + escapeHtml(title.charAt(0).toUpperCase() + title.slice(1)) + '</h2><p contenteditable="true">A first layout based on your brief. Edit this text and add sections from the left panel.</p><button contenteditable="true">Explore</button></section>' + blockHTML("Text") + (brief.toLowerCase().includes("3d") ? blockHTML("3D Scene") : "") + blockHTML("Button");
+    bindBlocks(); selectBlock(stage().querySelector(".nb")); status("Draft created · Unsaved");
+  }
+  function undo() { if (!history.length) return; redoStack.push(stage().innerHTML); stage().innerHTML = history.pop(); bindBlocks(); selectedId = null; status("Undo · Unsaved"); }
+  function redo() { if (!redoStack.length) return; history.push(stage().innerHTML); stage().innerHTML = redoStack.pop(); bindBlocks(); selectedId = null; status("Redo · Unsaved"); }
+  function saveProject() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({version:2, html:stage().innerHTML, savedAt:new Date().toISOString()})); status("Saved on this device ✓"); }
+    catch (_) { alert("Could not save. Browser storage may be full or disabled."); }
+  }
+  function loadProject() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("nexoraOwnerProject");
+      if (!raw) { alert("No saved project found on this device."); return; }
+      const data = JSON.parse(raw), html = typeof data === "string" ? data : (data.html || "");
+      if (!html || typeof html !== "string") throw new Error("Invalid project");
+      snapshot(); stage().innerHTML = html; bindBlocks(); selectedId = null; status("Project loaded ✓");
+    } catch (_) { alert("The saved project could not be opened. It may be damaged or from an incompatible version."); }
+  }
+  function setView(view) {
+    currentView = view; const wrap = document.querySelector(".stage-wrap");
+    if (wrap) { wrap.classList.remove("view-tablet","view-mobile"); if (view !== "desktop") wrap.classList.add("view-" + view); }
+  }
+  function previewProject() {
+    const win = window.open("", "_blank");
+    if (!win) { alert("Allow pop-ups to open the preview."); return; }
+    const doc = makeDocument(stage().innerHTML);
+    win.document.open(); win.document.write(doc); win.document.close();
+  }
+  function makeDocument(content) {
+    const css = [...document.querySelectorAll('link[rel="stylesheet"]')].map(l => '<link rel="stylesheet" href="' + escapeHtml(l.href) + '">').join("");
+    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nexora Project Draft</title>' + css + '<style>body{margin:0;background:#f5f5f2;color:#111}.stage-wrap{max-width:1100px;margin:auto}#stage{min-height:100vh;padding:24px}.selected{outline:0!important}</style></head><body><main id="stage">' + content + '</main></body></html>';
+  }
+  function exportProject() {
+    const blob = new Blob([makeDocument(stage().innerHTML)], {type:"text/html;charset=utf-8"});
+    const url = URL.createObjectURL(blob), a = document.createElement("a");
+    a.href = url; a.download = "nexora-studio-draft.html"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500); status("HTML draft exported ✓");
+  }
+  function openStudio() { $("studio").scrollIntoView({behavior:"smooth",block:"start"}); }
+  window.addBlock = addBlock; window.generate = generate; window.undo = undo; window.redo = redo;
+  window.saveProject = saveProject; window.loadProject = loadProject; window.setView = setView;
+  window.previewProject = previewProject; window.exportProject = exportProject; window.openStudio = openStudio;
+  document.addEventListener("DOMContentLoaded", () => { bindBlocks(); });
+})();
