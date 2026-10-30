@@ -1,8 +1,78 @@
-<!doctype html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Nexora Studio AI</title><link rel="stylesheet" href="style.css"/></head><body><div id="ownerBar" style="background:#a6ff4d;color:#071006;text-align:center;padding:10px;font-weight:900">NEXORA STUDIO · WORKSPACE PREVIEW</div>
-<header><b>NEXORA <span>STUDIO AI</span></b><nav><a href="#features">Features</a><a href="#templates">Templates</a><a href="#pricing">Pricing</a></nav><button onclick="openStudio()">Start Creating</button></header>
-<main><section class="hero"><div class="badge">VISUAL WEBSITE BUILDER · 3D · ANIMATION</div><h1>Describe it.<br><em>Design it.</em> Publish it.</h1><p>Create editable website drafts, arrange sections visually, add motion and 3D embeds, then export your project.</p><div class="prompt"><input id="idea" placeholder="Build a futuristic fashion store with 3D product hero…"/><button onclick="generate()">Generate ✦</button></div><small>Prompt-based starter drafts · Local project save · HTML export</small></section>
-<section class="canvas"><aside><h3>Insert</h3><button onclick="addBlock('Hero')">＋ Hero</button><button onclick="addBlock('Text')">＋ Text</button><button onclick="addBlock('Image')">＋ Image</button><button onclick="addBlock('3D Scene')">＋ 3D Scene</button><button onclick="addBlock('Button')">＋ Button</button></aside><div class="preview"><div class="toolbar"><span>● ● ●</span><b>Live Canvas</b><button onclick="undo()">Undo</button><button onclick="redo()">Redo</button><button onclick="saveProject()">Save</button><button onclick="loadProject()">Load</button><button onclick="previewProject()">Preview</button><button onclick="exportProject()">Export HTML</button><span id="saveStatus" aria-live="polite">Not saved</span></div><div id="stage"><div class="orb"></div><p class="eyebrow">YOUR NEXT IDEA</p><h2>Build beyond<br/>the template.</h2><p>Click elements, add blocks and prototype visually.</p><button>Edit this section</button></div></div><aside><h3>Design</h3><label>Layout</label><select><option>Auto</option><option>Stack</option><option>Grid</option></select><label>Animation</label><select><option>Fade + Float</option><option>Slide</option><option>Scale</option></select><label>Radius</label><input type="range"/><button onclick="exportProject()">Export HTML ↗</button></aside></section>
-<section id="features" class="grid"><article><b>AI Site Generation</b><p>Turn a plain-language idea into an editable site structure.</p></article><article><b>Visual Canvas</b><p>Compose responsive sections without writing code.</p></article><article><b>Motion Studio</b><p>Add scroll, hover and entrance animations.</p></article><article><b>3D Ready</b><p>Embed interactive Spline/WebGL scenes and product visuals.</p></article><article><b>Responsive</b><p>Desktop, tablet and mobile controls in one workspace.</p></article><article><b>Publish</b><p>Preview projects and prepare them for a live web deployment.</p></article></section>
-<section id="templates" class="templates"><h2>Start from an idea, not a blank page.</h2><div><span>Fashion 3D</span><span>Agency</span><span>Portfolio</span><span>SaaS</span></div></section>
-<section id="pricing" class="pricing"><p>EARLY ACCESS</p><h2>Build first.<br/>Publish anywhere.</h2><p>Visual editing, responsive drafts, motion, 3D embeds and downloadable HTML export.</p><small>Hosted publishing, AI-provider connection and paid plans are not enabled in this preview yet.</small></section></main>
-<footer>NEXORA STUDIO AI <span>Original creative web-building workspace.</span></footer><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#08090c">
+  <meta name="description" content="Nexora Studio AI — an early-access visual website prototyping workspace.">
+  <title>Nexora Studio AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="notice">NEXORA STUDIO AI · EARLY ACCESS WORKSPACE</div>
+  <header>
+    <a class="brand" href="#" aria-label="Nexora Studio home">NEXORA <span>STUDIO AI</span></a>
+    <nav aria-label="Main navigation"><a href="#features">Features</a><a href="#templates">Ideas</a><a href="#pricing">Access</a></nav>
+    <button class="primary" onclick="openStudio()">Open Studio</button>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="badge">VISUAL WEBSITE PROTOTYPING WORKSPACE</div>
+      <h1>Build your next<br><em>big idea.</em></h1>
+      <p>Turn a brief into an editable website draft. Arrange sections, customise styles, preview layouts and export clean HTML.</p>
+      <form class="prompt" onsubmit="event.preventDefault();generate()">
+        <label class="sr-only" for="idea">Describe your website</label>
+        <input id="idea" maxlength="240" placeholder="Describe your website idea…" autocomplete="off">
+        <button class="primary" type="submit">Create draft <span aria-hidden="true">✦</span></button>
+      </form>
+      <small>Early-access prototype · Draft generation runs in your browser · No account or cloud publishing yet</small>
+    </section>
+    <section class="canvas" id="studio" aria-label="Website editor">
+      <aside class="side-panel">
+        <h3>Add section</h3>
+        <button class="tool" onclick="addBlock('Hero')">＋ Hero</button>
+        <button class="tool" onclick="addBlock('Text')">＋ Text</button>
+        <button class="tool" onclick="addBlock('Image')">＋ Image</button>
+        <button class="tool" onclick="addBlock('3D Scene')">＋ 3D embed</button>
+        <button class="tool" onclick="addBlock('Button')">＋ Button</button>
+        <p class="hint">Select a section on the canvas to edit it.</p>
+      </aside>
+      <div class="workspace">
+        <div class="toolbar">
+          <span class="live-label"><i></i> EDITOR</span>
+          <div class="toolbar-actions">
+            <button onclick="undo()" title="Undo">↶</button><button onclick="redo()" title="Redo">↷</button>
+            <button onclick="setView('desktop')">Desktop</button><button onclick="setView('tablet')">Tablet</button><button onclick="setView('mobile')">Mobile</button>
+            <button onclick="saveProject()">Save</button><button onclick="loadProject()">Load</button>
+            <button onclick="previewProject()">Preview</button><button class="primary" onclick="exportProject()">Export HTML</button>
+          </div>
+          <span id="saveStatus" role="status" aria-live="polite">Unsaved changes</span>
+        </div>
+        <div class="stage-wrap"><div id="stage" aria-label="Editable page canvas">
+          <section class="nb starter-block" data-block="Hero">
+            <div class="orb" aria-hidden="true"></div>
+            <p class="eyebrow">YOUR NEXT IDEA</p><h2 contenteditable="true">Build beyond<br>the template.</h2>
+            <p contenteditable="true">Select this section to customise its look and feel.</p>
+            <button contenteditable="true">Get started</button>
+          </section>
+        </div></div>
+      </div>
+      <aside class="side-panel inspector-panel" id="inspector">
+        <h3>Design inspector</h3><p class="hint">Choose a section to see its settings.</p>
+      </aside>
+    </section>
+    <section id="features" class="feature-grid">
+      <article><b>Prompt-to-draft</b><p>Create a starter layout from your written brief. This prototype does not call an external AI model yet.</p></article>
+      <article><b>Visual editing</b><p>Select, reorder, duplicate and customise content blocks on the canvas.</p></article>
+      <article><b>Responsive preview</b><p>Check desktop, tablet and mobile canvas widths.</p></article>
+      <article><b>3D embeds</b><p>Add a secure HTTPS embed URL for a hosted 3D scene.</p></article>
+      <article><b>Local projects</b><p>Save and reopen drafts in this browser on this device.</p></article>
+      <article><b>HTML export</b><p>Download a standalone HTML draft to continue development.</p></article>
+    </section>
+    <section id="templates" class="ideas"><h2>Start with a direction.</h2><div><span>Product launch</span><span>Creative agency</span><span>Portfolio</span><span>SaaS landing page</span></div></section>
+    <section id="pricing" class="access"><p class="eyebrow">EARLY ACCESS</p><h2>Prototype first.<br>Grow from there.</h2><p>The current live preview includes browser-based editing and HTML export. Cloud publishing, account login, connected AI providers and subscriptions are not enabled yet.</p></section>
+  </main>
+  <footer><b>NEXORA STUDIO AI</b><span>Original creative web-building workspace · Early access</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>
