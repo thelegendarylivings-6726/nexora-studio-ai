@@ -46,7 +46,7 @@
     panel.innerHTML = '<h3>Design inspector</h3><p class="hint">Changes apply to the selected section.</p>' +
       '<label for="bgColor">Background</label><input id="bgColor" type="color" value="' + safeColor(el.style.backgroundColor, "#ffffff") + '">' +
       '<label for="textColor">Text colour</label><input id="textColor" type="color" value="' + safeColor(el.style.color, "#111111") + '">' +
-      '<label for="padRange">Padding</label><input id="padRange" type="range" min="8" max="100" value="' + parseInt(el.style.padding, 10 || 28) + '">' +
+      '<label for="padRange">Padding</label><input id="padRange" type="range" min="8" max="100" value="' + (parseInt(el.style.padding, 10) || 28) + '">' +
       '<label for="radiusRange">Corner radius</label><input id="radiusRange" type="range" min="0" max="48" value="' + (parseInt(el.style.borderRadius, 10) || 14) + '">' +
       '<label for="embedUrl">3D / iframe HTTPS URL</label><input id="embedUrl" type="url" placeholder="https://…"><button class="tool" id="applyEmbed">Apply embed</button>' +
       '<div class="inspector-actions"><button class="tool" id="duplicateBlock">Duplicate</button><button class="tool" id="moveUp">Move up</button><button class="tool" id="moveDown">Move down</button><button class="danger" id="deleteBlock">Delete section</button></div>';
